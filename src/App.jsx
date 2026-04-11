@@ -33,6 +33,8 @@ export default function App() {
   const [theme, setTheme] = useState(getInitialTheme);
   const [userAction, setUserAction] = useState('viewpoint_changed');
   const [quizState, setQuizState] = useState({ isOpen: false, selectedIndex: null });
+  const [isViewpointPanelOpen, setIsViewpointPanelOpen] = useState(true);
+  const [isLearningPanelOpen, setIsLearningPanelOpen] = useState(true);
 
   useEffect(() => {
     if (!isPlaying) {
@@ -121,18 +123,45 @@ export default function App() {
     setUserAction('quiz_answered');
   };
 
+  const shellClassName = [
+    'app-shell',
+    !isViewpointPanelOpen ? 'is-left-collapsed' : '',
+    !isLearningPanelOpen ? 'is-right-collapsed' : '',
+  ]
+    .filter(Boolean)
+    .join(' ');
+
   return (
-    <div className="app-shell">
-      <ViewpointSelector
-        selectedViewpointId={selectedViewpointId}
-        onSelect={handleSelectViewpoint}
-        locale={locale}
-        theme={theme}
-        onLocaleChange={setLocale}
-        onThemeChange={setTheme}
-      />
+    <div className={shellClassName}>
+      {isViewpointPanelOpen && (
+        <ViewpointSelector
+          selectedViewpointId={selectedViewpointId}
+          onSelect={handleSelectViewpoint}
+          locale={locale}
+          theme={theme}
+          onLocaleChange={setLocale}
+          onThemeChange={setTheme}
+        />
+      )}
 
       <main className="center-column">
+        <div className="workspace-toolbar">
+          <button
+            type="button"
+            className={`toggle-chip workspace-toggle${isViewpointPanelOpen ? '' : ' is-active'}`}
+            onClick={() => setIsViewpointPanelOpen((current) => !current)}
+          >
+            {isViewpointPanelOpen ? copy.hideViewpointPanel : copy.showViewpointPanel}
+          </button>
+          <button
+            type="button"
+            className={`toggle-chip workspace-toggle${isLearningPanelOpen ? '' : ' is-active'}`}
+            onClick={() => setIsLearningPanelOpen((current) => !current)}
+          >
+            {isLearningPanelOpen ? copy.hideLearningPanel : copy.showLearningPanel}
+          </button>
+        </div>
+
         <Suspense fallback={<section className="stage-panel stage-panel--loading">{copy.loading3d}</section>}>
           <SimulationCanvas simulationState={simulationState} locale={locale} theme={theme} />
         </Suspense>
@@ -147,14 +176,16 @@ export default function App() {
         />
       </main>
 
-      <LearningModule
-        simulationState={simulationState}
-        tutorContent={tutorContent}
-        quizSession={quizSession}
-        locale={locale}
-        onRequestQuiz={handleRequestQuiz}
-        onAnswerQuiz={handleAnswerQuiz}
-      />
+      {isLearningPanelOpen && (
+        <LearningModule
+          simulationState={simulationState}
+          tutorContent={tutorContent}
+          quizSession={quizSession}
+          locale={locale}
+          onRequestQuiz={handleRequestQuiz}
+          onAnswerQuiz={handleAnswerQuiz}
+        />
+      )}
     </div>
   );
 }

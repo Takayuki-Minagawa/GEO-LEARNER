@@ -110,7 +110,7 @@ input {
 
 .center-column {
   display: grid;
-  grid-template-rows: minmax(0, 1fr) auto;
+  grid-template-rows: auto minmax(0, 1fr) auto;
   gap: 1rem;
   min-height: 0;
 }
@@ -203,6 +203,17 @@ input {
   flex-wrap: wrap;
 }
 
+.workspace-toolbar {
+  display: flex;
+  gap: 0.65rem;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.workspace-toggle {
+  box-shadow: 0 10px 24px color-mix(in srgb, var(--accent-strong) 12%, transparent);
+}
+
 .selector-list {
   display: grid;
   gap: 0.75rem;
@@ -280,6 +291,27 @@ input {
 .stage-canvas {
   position: relative;
   min-height: 520px;
+}
+
+.app-shell.is-left-collapsed {
+  grid-template-columns: minmax(0, 1fr) minmax(320px, 380px);
+}
+
+.app-shell.is-right-collapsed {
+  grid-template-columns: minmax(260px, 300px) minmax(0, 1fr);
+}
+
+.app-shell.is-left-collapsed.is-right-collapsed {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.app-shell.is-left-collapsed .stage-canvas,
+.app-shell.is-right-collapsed .stage-canvas {
+  min-height: 620px;
+}
+
+.app-shell.is-left-collapsed.is-right-collapsed .stage-canvas {
+  min-height: 720px;
 }
 
 .stage-canvas canvas {
@@ -643,7 +675,10 @@ input {
 }
 
 @media (max-width: 1180px) {
-  .app-shell {
+  .app-shell,
+  .app-shell.is-left-collapsed,
+  .app-shell.is-right-collapsed,
+  .app-shell.is-left-collapsed.is-right-collapsed {
     grid-template-columns: 280px minmax(0, 1fr);
   }
 
@@ -653,12 +688,23 @@ input {
 }
 
 @media (max-width: 900px) {
-  .app-shell {
+  .app-shell,
+  .app-shell.is-left-collapsed,
+  .app-shell.is-right-collapsed,
+  .app-shell.is-left-collapsed.is-right-collapsed {
     grid-template-columns: 1fr;
   }
 
   .center-column {
     order: 1;
+  }
+
+  .workspace-toolbar {
+    justify-content: stretch;
+  }
+
+  .workspace-toggle {
+    flex: 1 1 180px;
   }
 
   .selector-panel {

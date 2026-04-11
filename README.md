@@ -36,6 +36,7 @@ The `Learning Module` panel provides explanatory guidance and a short quiz based
 - Interface options
   - Default Japanese UI with an English toggle
   - Light mode and dark mode switching
+  - Show and hide controls for the left and right side panels
   - Custom SVG favicon for the published site
 
 ## Technology Stack
@@ -112,7 +113,6 @@ GEO-LEARNER/
 │   ├── App.jsx
 │   ├── main.jsx
 │   └── styles.css
-├── AI指示書.md
 ├── index.html
 ├── package.json
 ├── vite.config.js
