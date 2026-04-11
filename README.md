@@ -24,7 +24,7 @@ The `Learning Module` panel provides explanatory guidance and a short quiz based
   - Simplified Solar System layout rendered in 3D
   - Visual relationship between the selected body and Earth
 - Earth inset display
-  - Enlarged phase view of Earth
+  - Enlarged phase view of Earth shown at the top of the learning panel
 - Learning panel
   - Context-sensitive explanation of the current state
   - Observation prompts
@@ -37,6 +37,7 @@ The `Learning Module` panel provides explanatory guidance and a short quiz based
   - Default Japanese UI with an English toggle
   - Light mode and dark mode switching
   - Show and hide controls for the left and right side panels
+  - Full orbit overview mode to zoom out and see the entire Solar System
   - Custom SVG favicon for the published site
 
 ## Technology Stack
@@ -100,6 +101,7 @@ GEO-LEARNER/
 │   └── favicon.svg
 ├── src/
 │   ├── components/
+│   │   ├── EarthInset.jsx
 │   │   ├── LearningModule.jsx
 │   │   ├── SimulationCanvas.jsx
 │   │   ├── SimulationControls.jsx
@@ -127,11 +129,16 @@ GEO-LEARNER/
 - Manages the active selection state
 - Provides language and theme switching controls
 
+### `EarthInset`
+
+- Displays an enlarged phase view of Earth with illumination and shadow
+- Shows distance and apparent angular size alongside the phase label
+
 ### `SimulationCanvas`
 
 - Renders the 3D Solar System view
 - Shows the positional relationship between the current viewpoint and Earth
-- Displays the Earth inset panel
+- Supports an overview mode that zooms out to show all planetary orbits
 
 ### `SimulationControls`
 
@@ -141,6 +148,7 @@ GEO-LEARNER/
 
 ### `LearningModule`
 
+- Displays the Earth inset view at the top of the panel
 - Displays the current simulation input state
 - Shows explanatory guidance
 - Displays a simplified orbital relationship diagram

@@ -2,7 +2,6 @@ import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { Html, Line, Stars } from '@react-three/drei';
 import * as THREE from 'three';
 import {
-  getApparentSizeLabel,
   getBodyName,
   getCopy,
   getDistanceLabel,
@@ -18,7 +17,7 @@ function OrbitRing({ radius, color, opacity = 0.26 }) {
   return <Line points={points} color={color} transparent opacity={opacity} lineWidth={1} />;
 }
 
-function BodyMarker({ body, label, isSelected, isEarth }) {
+function BodyMarker({ body, label, isSelected, isEarth, showLabel }) {
   const color = isEarth ? '#74d1ff' : body.color;
   const emissive = isEarth ? '#347dd8' : body.glow;
 
@@ -29,8 +28,8 @@ function BodyMarker({ body, label, isSelected, isEarth }) {
         <meshStandardMaterial color={color} emissive={emissive} emissiveIntensity={isSelected ? 1.5 : 0.55} />
       </mesh>
 
-      {(isSelected || isEarth) && (
-        <Html distanceFactor={12} center position={[0, body.renderRadius + 0.35, 0]}>
+      {(isSelected || isEarth || showLabel) && (
+        <Html distanceFactor={isSelected || isEarth ? 12 : 18} center position={[0, body.renderRadius + 0.35, 0]}>
           <div className={`body-label${isSelected ? ' is-selected' : ''}`}>{label}</div>
         </Html>
       )}
@@ -38,60 +37,32 @@ function BodyMarker({ body, label, isSelected, isEarth }) {
   );
 }
 
-function CameraManager({ viewerDisplayPosition, earthDisplayPosition, distanceAu }) {
+function CameraManager({ viewerDisplayPosition, earthDisplayPosition, distanceAu, isOverviewMode }) {
   const { camera } = useThree();
 
   useFrame(() => {
-    const viewer = new THREE.Vector3(...viewerDisplayPosition);
-    const earth = new THREE.Vector3(...earthDisplayPosition);
-    const midpoint = viewer.clone().lerp(earth, 0.5);
-    const offsetStrength = Math.min(Math.max(distanceAu * 1.35, 3.8), 15);
-    const desiredPosition = midpoint.clone().add(new THREE.Vector3(offsetStrength * 0.9, offsetStrength * 0.7, offsetStrength * 1.1));
+    let desiredPosition;
+    let lookTarget;
+
+    if (isOverviewMode) {
+      desiredPosition = new THREE.Vector3(8, 48, 12);
+      lookTarget = new THREE.Vector3(0, 0, 0);
+    } else {
+      const viewer = new THREE.Vector3(...viewerDisplayPosition);
+      const earth = new THREE.Vector3(...earthDisplayPosition);
+      lookTarget = viewer.clone().lerp(earth, 0.5);
+      const offsetStrength = Math.min(Math.max(distanceAu * 1.35, 3.8), 15);
+      desiredPosition = lookTarget.clone().add(new THREE.Vector3(offsetStrength * 0.9, offsetStrength * 0.7, offsetStrength * 1.1));
+    }
 
     camera.position.lerp(desiredPosition, 0.06);
-    camera.lookAt(midpoint);
+    camera.lookAt(lookTarget);
   });
 
   return null;
 }
 
-function EarthInset({ simulationState, locale }) {
-  const copy = getCopy(locale);
-  const phaseLabel = getPhaseLabel(simulationState.earthPhase, locale);
-  const distanceLabel = getDistanceLabel(simulationState.distanceAu, locale);
-  const apparentSizeLabel = getApparentSizeLabel(simulationState.apparentSizeArcseconds);
-  const phaseShift = (0.5 - simulationState.earthPhase.illuminatedFraction) * 110;
-  const shadowDirection = simulationState.earthPhase.waxing ? 1 : -1;
-
-  return (
-    <div className="earth-inset">
-      <div className="earth-inset__header">
-        <div>
-          <strong>{copy.earthInset}</strong>
-          <span>{phaseLabel}</span>
-        </div>
-        <div className="earth-inset__meta">
-          <span>{distanceLabel}</span>
-          <span>{apparentSizeLabel}</span>
-        </div>
-      </div>
-
-      <div className="earth-disc">
-        <div className="earth-disc__ocean" />
-        <div className="earth-disc__clouds" />
-        <div
-          className="earth-disc__shadow"
-          style={{
-            transform: `translateX(${phaseShift * shadowDirection}px)`,
-            opacity: Math.min(0.96, 0.35 + (1 - simulationState.earthPhase.illuminatedFraction)),
-          }}
-        />
-      </div>
-    </div>
-  );
-}
-
-export default function SimulationCanvas({ simulationState, locale, theme }) {
+export default function SimulationCanvas({ simulationState, locale, theme, isOverviewMode }) {
   const copy = getCopy(locale);
   const earth = simulationState.sceneBodies.find((body) => body.id === 'Earth');
   const viewer = simulationState.sceneBodies.find((body) => body.id === simulationState.viewpoint.id);
@@ -134,7 +105,7 @@ export default function SimulationCanvas({ simulationState, locale, theme }) {
       <div className="stage-canvas">
         <Canvas camera={{ position: [8, 6, 10], fov: 42 }}>
           <color attach="background" args={[scenePalette.background]} />
-          <fog attach="fog" args={[scenePalette.fog, 18, 42]} />
+          <fog attach="fog" args={[scenePalette.fog, isOverviewMode ? 40 : 18, isOverviewMode ? 90 : 42]} />
           <ambientLight intensity={theme === 'light' ? 0.92 : 0.72} />
           <pointLight position={[0, 0, 0]} intensity={220} decay={2} distance={50} color={scenePalette.pointLight} />
           {theme === 'dark' && <Stars radius={100} depth={60} count={3500} factor={4} saturation={0} fade />}
@@ -162,6 +133,7 @@ export default function SimulationCanvas({ simulationState, locale, theme }) {
               label={getBodyName(body, locale)}
               isSelected={body.id === simulationState.viewpoint.id}
               isEarth={body.id === 'Earth'}
+              showLabel={isOverviewMode && body.id !== 'Moon'}
             />
           ))}
 
@@ -169,10 +141,9 @@ export default function SimulationCanvas({ simulationState, locale, theme }) {
             viewerDisplayPosition={viewer.displayPosition}
             earthDisplayPosition={earth.displayPosition}
             distanceAu={simulationState.distanceAu}
+            isOverviewMode={isOverviewMode}
           />
         </Canvas>
-
-        <EarthInset simulationState={simulationState} locale={locale} />
       </div>
     </section>
   );

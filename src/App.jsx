@@ -35,6 +35,7 @@ export default function App() {
   const [quizState, setQuizState] = useState({ isOpen: false, selectedIndex: null });
   const [isViewpointPanelOpen, setIsViewpointPanelOpen] = useState(true);
   const [isLearningPanelOpen, setIsLearningPanelOpen] = useState(true);
+  const [isOverviewMode, setIsOverviewMode] = useState(false);
 
   useEffect(() => {
     if (!isPlaying) {
@@ -155,6 +156,13 @@ export default function App() {
           </button>
           <button
             type="button"
+            className={`toggle-chip workspace-toggle${isOverviewMode ? ' is-active' : ''}`}
+            onClick={() => setIsOverviewMode((current) => !current)}
+          >
+            {isOverviewMode ? copy.hideOverview : copy.showOverview}
+          </button>
+          <button
+            type="button"
             className={`toggle-chip workspace-toggle${isLearningPanelOpen ? '' : ' is-active'}`}
             onClick={() => setIsLearningPanelOpen((current) => !current)}
           >
@@ -163,7 +171,7 @@ export default function App() {
         </div>
 
         <Suspense fallback={<section className="stage-panel stage-panel--loading">{copy.loading3d}</section>}>
-          <SimulationCanvas simulationState={simulationState} locale={locale} theme={theme} />
+          <SimulationCanvas simulationState={simulationState} locale={locale} theme={theme} isOverviewMode={isOverviewMode} />
         </Suspense>
         <SimulationControls
           day={day}

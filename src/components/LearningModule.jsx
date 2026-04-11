@@ -4,6 +4,7 @@ import {
   getRelationshipLabel,
   getSystemInputPayload,
 } from '../lib/i18n.js';
+import EarthInset from './EarthInset.jsx';
 
 function pointOnCircle(radius, angle, center = 110) {
   return {
@@ -86,6 +87,8 @@ export default function LearningModule({
     <section className="panel learning-panel">
       <div className="panel-kicker">{copy.learningKicker}</div>
       <h2>{copy.tutorTitle}</h2>
+
+      <EarthInset simulationState={simulationState} locale={locale} />
 
       <div className="system-state">
         <div className="system-state__title">{copy.systemInput}</div>
