@@ -1,24 +1,23 @@
 import { SPEED_OPTIONS, TIMELINE_MAX_DAYS } from '../data/celestialBodies.js';
-
-function formatElapsed(day) {
-  const years = day / 365.25;
-  return `${day.toFixed(0)} day / ${years.toFixed(1)} year`;
-}
+import { getCopy, getElapsedLabel } from '../lib/i18n.js';
 
 export default function SimulationControls({
   day,
   isPlaying,
   speed,
+  locale,
   onTogglePlay,
   onSpeedChange,
   onDayChange,
 }) {
+  const copy = getCopy(locale);
+
   return (
     <section className="panel controls-panel">
-      <div className="panel-kicker">TIME CONTROL</div>
+      <div className="panel-kicker">{copy.controlsKicker}</div>
       <div className="controls-row">
         <button type="button" className="pill-button" onClick={onTogglePlay}>
-          {isPlaying ? '停止' : '再生'}
+          {isPlaying ? copy.pause : copy.play}
         </button>
 
         <div className="speed-toggle">
@@ -36,7 +35,7 @@ export default function SimulationControls({
       </div>
 
       <label className="timeline-field">
-        <span>Simulation Day</span>
+        <span>{copy.simulationDay}</span>
         <input
           type="range"
           min="0"
@@ -47,7 +46,7 @@ export default function SimulationControls({
         />
       </label>
 
-      <div className="timeline-meta">{formatElapsed(day)}</div>
+      <div className="timeline-meta">{getElapsedLabel(day, locale)}</div>
     </section>
   );
 }

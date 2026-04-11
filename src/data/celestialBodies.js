@@ -22,7 +22,8 @@ export const BODY_CONFIG = {
     orbitalPeriodDays: 87.97,
     initialAngleDeg: 28,
     inclination: 0.04,
-    summary: '太陽に最も近い軌道から、地球の公転の外側への広がりを観察できます。',
+    summaryJa: '太陽に最も近い軌道から、地球の公転の外側への広がりを観察できます。',
+    summaryEn: 'Observe Earth from the innermost orbit and compare how an outer-world view changes the geometry.',
   },
   Venus: {
     id: 'Venus',
@@ -35,7 +36,8 @@ export const BODY_CONFIG = {
     orbitalPeriodDays: 224.7,
     initialAngleDeg: 104,
     inclination: 0.05,
-    summary: '地球より内側の軌道から、地球が外惑星のように見えることを確かめられます。',
+    summaryJa: '地球より内側の軌道から、地球が外惑星のように見えることを確かめられます。',
+    summaryEn: 'From an inner orbit, Earth behaves more like a superior planet and can move far from the Sun.',
   },
   Earth: {
     id: 'Earth',
@@ -61,7 +63,8 @@ export const BODY_CONFIG = {
     initialAngleDeg: 230,
     inclination: 0.02,
     parentId: 'Earth',
-    summary: '地球の衛星からは、地球の満ち欠けが月と反対になる様子を直感的に比べられます。',
+    summaryJa: '地球の衛星からは、地球の満ち欠けが月と反対になる様子を直感的に比べられます。',
+    summaryEn: 'Compare the phase of Earth from its satellite and see how it mirrors the Moon as seen from Earth.',
   },
   Mars: {
     id: 'Mars',
@@ -74,7 +77,8 @@ export const BODY_CONFIG = {
     orbitalPeriodDays: 687,
     initialAngleDeg: 322,
     inclination: 0.06,
-    summary: '外惑星側から見ると、地球は金星のような内惑星として振る舞います。',
+    summaryJa: '外惑星側から見ると、地球は金星のような内惑星として振る舞います。',
+    summaryEn: 'From outside Earth’s orbit, Earth stays near the Sun and changes phase like an inner planet.',
   },
   Jupiter: {
     id: 'Jupiter',
@@ -87,7 +91,8 @@ export const BODY_CONFIG = {
     orbitalPeriodDays: 4332.59,
     initialAngleDeg: 264,
     inclination: 0.03,
-    summary: '地球は太陽の近くを動く内惑星となり、満ち欠けと離角の制限がはっきり見えます。',
+    summaryJa: '地球は太陽の近くを動く内惑星となり、満ち欠けと離角の制限がはっきり見えます。',
+    summaryEn: 'Earth acts like an inner planet here, with clear phase changes and a limited maximum elongation.',
   },
   Saturn: {
     id: 'Saturn',
@@ -100,7 +105,8 @@ export const BODY_CONFIG = {
     orbitalPeriodDays: 10759,
     initialAngleDeg: 40,
     inclination: 0.05,
-    summary: '遠距離の外惑星視点から、地球の見かけの大きさの小ささを強く実感できます。',
+    summaryJa: '遠距離の外惑星視点から、地球の見かけの大きさの小ささを強く実感できます。',
+    summaryEn: 'A distant outer-planet view makes Earth’s tiny apparent size especially easy to appreciate.',
   },
   Uranus: {
     id: 'Uranus',
@@ -113,7 +119,8 @@ export const BODY_CONFIG = {
     orbitalPeriodDays: 30688,
     initialAngleDeg: 198,
     inclination: 0.07,
-    summary: '地球は極小の点光源になり、位置関係の理解が主な観察テーマになります。',
+    summaryJa: '地球は極小の点光源になり、位置関係の理解が主な観察テーマになります。',
+    summaryEn: 'Earth shrinks to a tiny point, shifting the lesson toward orbital geometry rather than visible detail.',
   },
   Neptune: {
     id: 'Neptune',
@@ -126,7 +133,8 @@ export const BODY_CONFIG = {
     orbitalPeriodDays: 60182,
     initialAngleDeg: 300,
     inclination: 0.09,
-    summary: '最遠方クラスの視点で、地球がどれほど小さく太陽近くに集まって見えるかを学べます。',
+    summaryJa: '最遠方クラスの視点で、地球がどれほど小さく太陽近くに集まって見えるかを学べます。',
+    summaryEn: 'At this extreme distance, Earth stays clustered near the Sun and becomes almost point-like.',
   },
 };
 

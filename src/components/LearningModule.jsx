@@ -1,3 +1,10 @@
+import {
+  getBodyName,
+  getCopy,
+  getRelationshipLabel,
+  getSystemInputPayload,
+} from '../lib/i18n.js';
+
 function pointOnCircle(radius, angle, center = 110) {
   return {
     x: center + radius * Math.cos(angle),
@@ -5,7 +12,8 @@ function pointOnCircle(radius, angle, center = 110) {
   };
 }
 
-function OrbitDiagram({ simulationState }) {
+function OrbitDiagram({ simulationState, locale }) {
+  const copy = getCopy(locale);
   const earthOrbitRadius = 58;
   const viewerOrbitRadius =
     simulationState.category === 'outer'
@@ -22,10 +30,10 @@ function OrbitDiagram({ simulationState }) {
   return (
     <div className="orbit-card">
       <div className="orbit-card__header">
-        <strong>軌道の関係</strong>
-        <span>{simulationState.relationshipLabel}</span>
+        <strong>{copy.orbitRelationship}</strong>
+        <span>{getRelationshipLabel(simulationState.category, locale)}</span>
       </div>
-      <svg viewBox="0 0 220 220" role="img" aria-label="Orbit relationship diagram">
+      <svg viewBox="0 0 220 220" role="img" aria-label={copy.orbitRelationship}>
         <circle cx="110" cy="110" r="10" className="orbit-sun" />
         <circle cx="110" cy="110" r={earthOrbitRadius} className="orbit-ring" />
         {simulationState.category !== 'satellite' && (
@@ -37,13 +45,13 @@ function OrbitDiagram({ simulationState }) {
         <circle cx={earthPoint.x} cy={earthPoint.y} r="8" className="orbit-earth" />
         <circle cx={viewerPoint.x} cy={viewerPoint.y} r="7" className="orbit-viewpoint" />
         <text x="110" y="86" textAnchor="middle" className="orbit-label">
-          太陽
+          {copy.celestial.sun}
         </text>
         <text x={earthPoint.x} y={earthPoint.y - 13} textAnchor="middle" className="orbit-label">
-          地球
+          {copy.celestial.earth}
         </text>
         <text x={viewerPoint.x} y={viewerPoint.y - 13} textAnchor="middle" className="orbit-label">
-          {simulationState.viewpoint.nameJa}
+          {getBodyName(simulationState.viewpoint, locale)}
         </text>
       </svg>
     </div>
@@ -67,24 +75,20 @@ export default function LearningModule({
   simulationState,
   tutorContent,
   quizSession,
+  locale,
   onRequestQuiz,
   onAnswerQuiz,
 }) {
-  const systemInput = {
-    viewpoint: simulationState.viewpoint.nameEn,
-    earth_phase: simulationState.earthPhase.label,
-    distance_au: Number(simulationState.distanceAu.toFixed(3)),
-    apparent_size: simulationState.apparentSizeLabel,
-    user_action: simulationState.userAction,
-  };
+  const copy = getCopy(locale);
+  const systemInput = getSystemInputPayload(simulationState, locale);
 
   return (
     <section className="panel learning-panel">
-      <div className="panel-kicker">LEARNING MODULE</div>
-      <h2>地学チューターAI</h2>
+      <div className="panel-kicker">{copy.learningKicker}</div>
+      <h2>{copy.tutorTitle}</h2>
 
       <div className="system-state">
-        <div className="system-state__title">System Input</div>
+        <div className="system-state__title">{copy.systemInput}</div>
         <pre>{JSON.stringify(systemInput, null, 2)}</pre>
       </div>
 
@@ -105,18 +109,18 @@ export default function LearningModule({
         </div>
 
         <div className="lesson-prompt">
-          <span>次の観察ポイント</span>
+          <span>{copy.nextObservation}</span>
           <p>{tutorContent.prompt}</p>
         </div>
       </article>
 
-      <OrbitDiagram simulationState={simulationState} />
+      <OrbitDiagram simulationState={simulationState} locale={locale} />
 
       <section className="quiz-card">
         <div className="quiz-card__header">
-          <strong>理解度チェック</strong>
+          <strong>{copy.quizTitle}</strong>
           <button type="button" className="pill-button pill-button--secondary" onClick={onRequestQuiz}>
-            クイズを出題
+            {copy.requestQuiz}
           </button>
         </div>
 
@@ -146,16 +150,14 @@ export default function LearningModule({
             {quizSession.selectedIndex !== null && (
               <div className="quiz-feedback">
                 <strong>
-                  {quizSession.selectedIndex === quizSession.correctIndex ? '正解です。' : 'もう一度考えてみましょう。'}
+                  {quizSession.selectedIndex === quizSession.correctIndex ? copy.correct : copy.retry}
                 </strong>
                 <p>{renderEmphasisText(quizSession.explanation)}</p>
               </div>
             )}
           </div>
         ) : (
-          <p className="quiz-placeholder">
-            現在の視点に合わせて、位相・離角・内惑星/外惑星の理解を確かめるクイズを出題します。
-          </p>
+          <p className="quiz-placeholder">{copy.quizPlaceholder}</p>
         )}
       </section>
     </section>

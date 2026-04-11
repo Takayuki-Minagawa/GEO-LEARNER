@@ -1,13 +1,71 @@
 import { BODY_CONFIG, VIEWPOINT_IDS } from '../data/celestialBodies.js';
+import { getBodyName, getBodySummary, getCopy } from '../lib/i18n.js';
 
-export default function ViewpointSelector({ selectedViewpointId, onSelect }) {
+export default function ViewpointSelector({
+  selectedViewpointId,
+  onSelect,
+  locale,
+  theme,
+  onLocaleChange,
+  onThemeChange,
+}) {
+  const copy = getCopy(locale);
+
   return (
     <section className="panel selector-panel">
-      <div className="panel-kicker">VIEWPOINT SELECTOR</div>
-      <h1>GEO LEARNER</h1>
-      <p className="panel-intro">
-        太陽系の各視点へ移動して、地球の見え方の違いを比較します。
-      </p>
+      <div className="selector-header">
+        <div>
+          <div className="panel-kicker">{copy.selectorKicker}</div>
+          <h1>GEO LEARNER</h1>
+          <p className="panel-intro">{copy.selectorIntro}</p>
+        </div>
+
+        <div className="selector-toolbar">
+          <div className="toolbar-group">
+            <span className="toolbar-label">{copy.languageLabel}</span>
+            <div className="mode-toggle">
+              <button
+                type="button"
+                className={`toggle-chip${locale === 'ja' ? ' is-active' : ''}`}
+                onClick={() => onLocaleChange('ja')}
+                aria-pressed={locale === 'ja'}
+              >
+                日本語
+              </button>
+              <button
+                type="button"
+                className={`toggle-chip${locale === 'en' ? ' is-active' : ''}`}
+                onClick={() => onLocaleChange('en')}
+                aria-pressed={locale === 'en'}
+              >
+                English
+              </button>
+            </div>
+          </div>
+
+          <div className="toolbar-group">
+            <span className="toolbar-label">{copy.themeLabel}</span>
+            <div className="mode-toggle">
+              <button
+                type="button"
+                className={`toggle-chip${theme === 'light' ? ' is-active' : ''}`}
+                onClick={() => onThemeChange('light')}
+                aria-pressed={theme === 'light'}
+              >
+                {locale === 'ja' ? 'ライト' : 'Light'}
+              </button>
+              <button
+                type="button"
+                className={`toggle-chip${theme === 'dark' ? ' is-active' : ''}`}
+                onClick={() => onThemeChange('dark')}
+                aria-pressed={theme === 'dark'}
+              >
+                {locale === 'ja' ? 'ダーク' : 'Dark'}
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
 
       <div className="selector-list">
         {VIEWPOINT_IDS.map((bodyId) => {
@@ -26,8 +84,8 @@ export default function ViewpointSelector({ selectedViewpointId, onSelect }) {
                 style={{ '--swatch': body.color, '--swatch-glow': body.glow }}
               />
               <span className="selector-copy">
-                <strong>{body.nameJa}</strong>
-                <span>{body.summary}</span>
+                <strong>{getBodyName(body, locale)}</strong>
+                <span>{getBodySummary(body, locale)}</span>
               </span>
             </button>
           );

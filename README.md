@@ -33,6 +33,10 @@ The `Learning Module` panel provides explanatory guidance and a short quiz based
   - Play and pause
   - Multiple playback speeds
   - Timeline scrubber
+- Interface options
+  - Default Japanese UI with an English toggle
+  - Light mode and dark mode switching
+  - Custom SVG favicon for the published site
 
 ## Technology Stack
 
@@ -43,7 +47,7 @@ The `Learning Module` panel provides explanatory guidance and a short quiz based
 - drei
 - CSS
 
-The current implementation does not use a backend API or database.
+The current implementation does not use a backend API or database. Language and theme preferences are stored locally in the browser.
 
 ## Program Specification
 
@@ -91,6 +95,8 @@ GEO-LEARNER/
 ├── .github/
 │   └── workflows/
 │       └── deploy-pages.yml
+├── public/
+│   └── favicon.svg
 ├── src/
 │   ├── components/
 │   │   ├── LearningModule.jsx
@@ -100,6 +106,7 @@ GEO-LEARNER/
 │   ├── data/
 │   │   └── celestialBodies.js
 │   ├── lib/
+│   │   ├── i18n.js
 │   │   ├── orbitalMath.js
 │   │   └── tutor.js
 │   ├── App.jsx
@@ -118,6 +125,7 @@ GEO-LEARNER/
 
 - Displays the list of selectable viewpoints
 - Manages the active selection state
+- Provides language and theme switching controls
 
 ### `SimulationCanvas`
 
@@ -137,6 +145,7 @@ GEO-LEARNER/
 - Shows explanatory guidance
 - Displays a simplified orbital relationship diagram
 - Presents quiz questions and feedback
+- Regenerates text content according to the selected language
 
 ## Local Development
 
