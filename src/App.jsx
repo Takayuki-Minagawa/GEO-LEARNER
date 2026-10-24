@@ -80,7 +80,7 @@ function shuffledOrder(length, previous) {
   return order;
 }
 
-const CLOSED_QUIZ = { isOpen: false, selectedIndex: null, order: null, isRetry: false };
+const CLOSED_QUIZ = { isOpen: false, selectedIndex: null, order: null };
 
 function getQuizSession(quiz, quizState) {
   const order = quizState.order ?? quiz.options.map((_, index) => index);
@@ -152,6 +152,8 @@ export default function App() {
     sanitizeViewpointIds([...readStoredList(STORAGE_KEYS.visited), INITIAL_VIEWPOINT]),
   );
   const [clearedIds, setClearedIds] = useState(() => sanitizeViewpointIds(readStoredList(STORAGE_KEYS.cleared)));
+  // Viewpoints whose quiz was answered wrong this session; they can't be cleared until the next visit to the site.
+  const [failedIds, setFailedIds] = useState([]);
   const [showOnboarding, setShowOnboarding] = useState(() => readStorage(STORAGE_KEYS.onboarded) !== 'done');
   const [toasts, setToasts] = useState([]);
   const toastIdRef = useRef(0);
@@ -224,7 +226,7 @@ export default function App() {
   const quizSession = quizState.isOpen
     ? {
         ...getQuizSession(buildQuiz(simulationState, locale), quizState),
-        showRetryNote: quizState.isRetry && !clearedIds.includes(selectedViewpointId),
+        showRetryNote: failedIds.includes(selectedViewpointId) && !clearedIds.includes(selectedViewpointId),
       }
     : null;
 
@@ -280,27 +282,27 @@ export default function App() {
   };
 
   // Options are shuffled on every request so a retry can't be solved by position alone.
-  const openQuiz = (isRetry) => {
+  const handleRequestQuiz = () => {
     const optionCount = buildQuiz(simulationState, locale).options.length;
     setQuizState((current) => ({
       isOpen: true,
       selectedIndex: null,
       order: shuffledOrder(optionCount, current.order),
-      isRetry,
     }));
     setUserAction('request_quiz');
   };
-
-  const handleRequestQuiz = () => openQuiz(false);
-  const handleRetryQuiz = () => openQuiz(true);
 
   const handleAnswerQuiz = (selectedIndex) => {
     setQuizState((current) => ({ ...current, selectedIndex }));
     setUserAction('quiz_answered');
 
-    // Only a correct first attempt counts toward the observation log.
+    // Only a correct answer with no earlier wrong one at this viewpoint counts toward the observation log.
     const isCorrect = quizSession?.correctIndex === selectedIndex;
-    if (isCorrect && !quizState.isRetry && !clearedIds.includes(selectedViewpointId)) {
+    if (!isCorrect) {
+      setFailedIds((current) => (current.includes(selectedViewpointId) ? current : [...current, selectedViewpointId]));
+      return;
+    }
+    if (!failedIds.includes(selectedViewpointId) && !clearedIds.includes(selectedViewpointId)) {
       const nextCleared = [...clearedIds, selectedViewpointId];
       setClearedIds(nextCleared);
       pushToast(copy.toastQuizCleared(getBodyName(BODY_CONFIG[selectedViewpointId], locale)), 'quiz');
@@ -327,6 +329,7 @@ export default function App() {
     const handleKeyDown = (event) => {
       if (event.code !== 'Space') {
         lastInput = 'keyboard';
+        handledKeyDown = false;
         return;
       }
       if (event.altKey || event.ctrlKey || event.metaKey) {
@@ -350,10 +353,17 @@ export default function App() {
       }
     };
 
+    // A keyup lost to another window must not swallow the next Space.
+    const handleBlur = () => {
+      handledKeyDown = false;
+    };
+
     window.addEventListener('pointerdown', handlePointerDown, true);
     window.addEventListener('keydown', handleKeyDown, true);
     window.addEventListener('keyup', handleKeyUp, true);
+    window.addEventListener('blur', handleBlur);
     return () => {
+      window.removeEventListener('blur', handleBlur);
       window.removeEventListener('pointerdown', handlePointerDown, true);
       window.removeEventListener('keydown', handleKeyDown, true);
       window.removeEventListener('keyup', handleKeyUp, true);
@@ -438,7 +448,7 @@ export default function App() {
           quizSession={quizSession}
           locale={locale}
           onRequestQuiz={handleRequestQuiz}
-          onRetryQuiz={handleRetryQuiz}
+          onRetryQuiz={handleRequestQuiz}
           onAnswerQuiz={handleAnswerQuiz}
         />
       )}

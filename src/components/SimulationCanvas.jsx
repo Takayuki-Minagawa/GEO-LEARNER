@@ -95,7 +95,7 @@ function BodyMarker({ body, label, isSelected, isEarth, showLabel, haloColor }) 
       {(isSelected || isEarth) && <Halo radius={Math.max(body.renderRadius, 0.14)} color={haloColor} />}
 
       {(isSelected || isEarth || showLabel) && (
-        <Html center zIndexRange={[1, 0]} pointerEvents="none" position={[0, body.renderRadius + 0.35, 0]}>
+        <Html center zIndexRange={[1, 0]} style={{ pointerEvents: 'none' }} position={[0, body.renderRadius + 0.35, 0]}>
           <div className={`body-label${isSelected ? ' is-selected' : ''}${isEarth ? ' is-earth' : ''}`}>{label}</div>
         </Html>
       )}

@@ -28,7 +28,7 @@ The `Learning Module` panel provides explanatory guidance and a short quiz based
   - The lit side faces the actual direction of the Sun, with an illumination gauge and metric tiles
 - Observation log
   - Tracks which viewpoints have been observed and which quizzes have been cleared (stored locally)
-  - Quiz options are shuffled on each request; only a correct first attempt counts as cleared
+  - Quiz options are shuffled on each request; a viewpoint counts as cleared only if its quiz is answered correctly with no wrong answer there earlier in the same visit
   - Small toast notifications for first observations and cleared quizzes
 - First-visit guide
   - A dismissible three-step guide (choose a viewpoint, move through time, check with a quiz)
