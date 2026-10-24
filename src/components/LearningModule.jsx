@@ -17,28 +17,27 @@ function pointOnCircle(radius, angle, center = 110) {
   };
 }
 
-function ElongationArc({ viewerPoint, earthPoint, degrees, label }) {
-  const radius = 22;
+// The diagram's radii are schematic, so the wedge uses the true elongation (opened from the Sun
+// direction toward Earth's side) rather than the angle between the schematic points.
+function ElongationArc({ viewerPoint, earthPoint, degrees }) {
+  const radius = 24;
   const toSun = Math.atan2(110 - viewerPoint.y, 110 - viewerPoint.x);
   const toEarth = Math.atan2(earthPoint.y - viewerPoint.y, earthPoint.x - viewerPoint.x);
-  let delta = toEarth - toSun;
-  while (delta > Math.PI) delta -= Math.PI * 2;
-  while (delta <= -Math.PI) delta += Math.PI * 2;
+  let side = toEarth - toSun;
+  while (side > Math.PI) side -= Math.PI * 2;
+  while (side <= -Math.PI) side += Math.PI * 2;
+  const delta = Math.sign(side || 1) * ((degrees * Math.PI) / 180);
 
   const start = pointOnCircle(radius, toSun, 0);
   const end = pointOnCircle(radius, toSun + delta, 0);
-  const middle = pointOnCircle(radius + 14, toSun + delta / 2, 0);
+  const largeArc = Math.abs(delta) > Math.PI ? 1 : 0;
 
   return (
-    <g className="orbit-elongation" transform={`translate(${viewerPoint.x} ${viewerPoint.y})`}>
-      <path
-        d={`M0 0L${start.x} ${start.y}A${radius} ${radius} 0 0 ${delta > 0 ? 1 : 0} ${end.x} ${end.y}Z`}
-        className="orbit-elongation__wedge"
-      />
-      <text x={middle.x} y={middle.y + 3} textAnchor="middle" className="orbit-elongation__label">
-        {label} {getElongationLabel(degrees)}
-      </text>
-    </g>
+    <path
+      transform={`translate(${viewerPoint.x} ${viewerPoint.y})`}
+      d={`M0 0L${start.x} ${start.y}A${radius} ${radius} 0 ${largeArc} ${delta > 0 ? 1 : 0} ${end.x} ${end.y}Z`}
+      className="orbit-elongation__wedge"
+    />
   );
 }
 
@@ -79,7 +78,6 @@ function OrbitDiagram({ simulationState, locale }) {
             viewerPoint={viewerPoint}
             earthPoint={earthPoint}
             degrees={simulationState.solarElongationDegrees}
-            label={copy.elongationArc}
           />
         )}
         <line x1={viewerPoint.x} y1={viewerPoint.y} x2={earthPoint.x} y2={earthPoint.y} className="orbit-sightline" />
@@ -96,6 +94,13 @@ function OrbitDiagram({ simulationState, locale }) {
           {getBodyName(simulationState.viewpoint, locale)}
         </text>
       </svg>
+      {simulationState.category !== 'satellite' && (
+        <p className="orbit-legend">
+          <span className="orbit-legend__swatch" aria-hidden="true" />
+          {copy.elongation}
+          <strong>{getElongationLabel(simulationState.solarElongationDegrees)}</strong>
+        </p>
+      )}
       <p className="card__footnote">
         {locale === 'ja'
           ? '点線は観測者から地球への視線。距離は縮尺どおりではない模式図です。'
@@ -134,6 +139,7 @@ export default function LearningModule({
   quizSession,
   locale,
   onRequestQuiz,
+  onRetryQuiz,
   onAnswerQuiz,
 }) {
   const copy = getCopy(locale);
@@ -241,8 +247,9 @@ export default function LearningModule({
                 <div className={`quiz-feedback${isCorrect ? '' : ' is-wrong'}`}>
                   <strong>{isCorrect ? copy.correct : copy.retry}</strong>
                   <p>{renderEmphasisText(quizSession.explanation)}</p>
+                  {isCorrect && quizSession.showRetryNote && <p className="quiz-feedback__note">{copy.retryCorrectNote}</p>}
                   {!isCorrect && (
-                    <button type="button" className="pill-button pill-button--ghost" onClick={onRequestQuiz}>
+                    <button type="button" className="pill-button pill-button--ghost" onClick={onRetryQuiz}>
                       <Icon name="retry" size={15} /> {copy.tryAgain}
                     </button>
                   )}

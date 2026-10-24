@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import { VIEWPOINT_IDS } from '../data/celestialBodies.js';
 import { getCopy } from '../lib/i18n.js';
 import Icon from './Icons.jsx';
@@ -10,7 +11,7 @@ function ProgressMeter({ visitedCount, clearedCount, locale }) {
   const circumference = 2 * Math.PI * 15;
 
   return (
-    <div className="progress-meter" role="group" aria-label={copy.progressAria(visitedCount, clearedCount, total)}>
+    <div className="progress-meter" role="img" aria-label={copy.progressAria(visitedCount, clearedCount, total)}>
       <svg className="progress-meter__ring" viewBox="0 0 36 36" aria-hidden="true">
         <circle cx="18" cy="18" r="15" className="progress-meter__track" />
         <circle
@@ -37,7 +38,7 @@ function ProgressMeter({ visitedCount, clearedCount, locale }) {
   );
 }
 
-export default function AppHeader({
+function AppHeader({
   locale,
   theme,
   onLocaleChange,
@@ -57,7 +58,7 @@ export default function AppHeader({
       <div className="brand">
         <img className="brand__mark" src="./favicon.svg" alt="" width="40" height="40" />
         <div className="brand__copy">
-          <span className="brand__name">GEO LEARNER</span>
+          <h1 className="brand__name">GEO LEARNER</h1>
           <span className="brand__tagline">{copy.tagline}</span>
         </div>
       </div>
@@ -105,6 +106,7 @@ export default function AppHeader({
             className="segmented__item"
             onClick={() => onLocaleChange('en')}
             aria-pressed={locale === 'en'}
+            aria-label="English"
             lang="en"
           >
             EN
@@ -137,3 +139,6 @@ export default function AppHeader({
     </header>
   );
 }
+
+// Memoized: the app re-renders every animation frame while playing.
+export default memo(AppHeader);

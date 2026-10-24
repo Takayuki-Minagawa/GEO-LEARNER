@@ -103,9 +103,6 @@ export default function EarthInset({ simulationState, locale }) {
             <clipPath id={`${idPrefix}-lit`}>
               <path d={litPath} transform={`scale(${sunSide} 1)`} />
             </clipPath>
-            <filter id={`${idPrefix}-soft`} x="-10%" y="-10%" width="120%" height="120%">
-              <feGaussianBlur stdDeviation="0.9" />
-            </filter>
           </defs>
 
           <circle
@@ -122,7 +119,7 @@ export default function EarthInset({ simulationState, locale }) {
 
           <circle r={RADIUS + 9} fill={`url(#${idPrefix}-glow)`} opacity={0.4 + earthPhase.illuminatedFraction * 0.6} />
           <EarthArt idPrefix={idPrefix} night />
-          <g clipPath={`url(#${idPrefix}-lit)`} filter={`url(#${idPrefix}-soft)`}>
+          <g clipPath={`url(#${idPrefix}-lit)`}>
             <EarthArt idPrefix={idPrefix} />
           </g>
 

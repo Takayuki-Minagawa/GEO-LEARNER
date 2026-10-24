@@ -11,15 +11,21 @@ import {
 } from '../lib/i18n.js';
 import Icon from './Icons.jsx';
 
-const prefersReducedMotion =
-  typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+// Kept as a live MediaQueryList so a change to the OS setting applies without a reload.
+const reducedMotionQuery =
+  typeof window !== 'undefined' && window.matchMedia ? window.matchMedia('(prefers-reduced-motion: reduce)') : null;
 
 // A softly pulsing ring that always faces the camera, used to point out the observer and Earth.
 function Halo({ radius, color }) {
   const ringRef = useRef();
 
   useFrame(({ clock }) => {
-    if (!ringRef.current || prefersReducedMotion) {
+    if (!ringRef.current) {
+      return;
+    }
+    if (reducedMotionQuery?.matches) {
+      ringRef.current.scale.setScalar(1);
+      ringRef.current.material.opacity = 0.6;
       return;
     }
     const wave = (Math.sin(clock.elapsedTime * 2.4) + 1) / 2;
@@ -63,7 +69,8 @@ function SceneFog({ color, framingStrength, isOverviewMode }) {
   const boost = useAspectBoost();
   const near = (isOverviewMode ? 40 : 18 + framingStrength) * boost;
   const far = (isOverviewMode ? 90 : 30 + framingStrength * 2.5) * boost;
-  return <fog attach="fog" args={[color, near, far]} />;
+  // near/far as props update the existing fog instead of rebuilding it (and every fogged shader) each frame.
+  return <fog attach="fog" args={[color]} near={near} far={far} />;
 }
 
 function BodyMarker({ body, label, isSelected, isEarth, showLabel, haloColor }) {
@@ -88,7 +95,7 @@ function BodyMarker({ body, label, isSelected, isEarth, showLabel, haloColor }) 
       {(isSelected || isEarth) && <Halo radius={Math.max(body.renderRadius, 0.14)} color={haloColor} />}
 
       {(isSelected || isEarth || showLabel) && (
-        <Html center position={[0, body.renderRadius + 0.35, 0]}>
+        <Html center zIndexRange={[1, 0]} pointerEvents="none" position={[0, body.renderRadius + 0.35, 0]}>
           <div className={`body-label${isSelected ? ' is-selected' : ''}${isEarth ? ' is-earth' : ''}`}>{label}</div>
         </Html>
       )}
@@ -160,9 +167,9 @@ export default function SimulationCanvas({ simulationState, locale, theme, isOve
       <div className="stage-hud stage-hud--top">
         <div className="stage-title">
           <div className="panel-kicker">{copy.stageKicker}</div>
-          <h1 key={viewpointName} className="stage-title__heading">
+          <h2 key={viewpointName} className="stage-title__heading">
             {copy.stageTitle(viewpointName)}
-          </h1>
+          </h2>
         </div>
         <button
           type="button"

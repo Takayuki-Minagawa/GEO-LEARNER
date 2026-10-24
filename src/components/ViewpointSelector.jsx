@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import { BODY_CONFIG, VIEWPOINT_IDS } from '../data/celestialBodies.js';
 import { getBodyName, getBodySummary, getCopy } from '../lib/i18n.js';
 import { getObservationCategory } from '../lib/orbitalMath.js';
@@ -15,7 +16,7 @@ export function PlanetSphere({ body, size = 'md' }) {
   );
 }
 
-export default function ViewpointSelector({ selectedViewpointId, onSelect, locale, visitedIds, clearedIds }) {
+function ViewpointSelector({ selectedViewpointId, onSelect, locale, visitedIds, clearedIds }) {
   const copy = getCopy(locale);
   const selectedBody = BODY_CONFIG[selectedViewpointId];
 
@@ -101,3 +102,6 @@ export default function ViewpointSelector({ selectedViewpointId, onSelect, local
     </section>
   );
 }
+
+// Memoized: the app re-renders every animation frame while playing.
+export default memo(ViewpointSelector);

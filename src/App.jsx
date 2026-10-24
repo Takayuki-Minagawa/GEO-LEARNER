@@ -46,8 +46,50 @@ function useMediaQuery(query) {
   return matches;
 }
 
-function isTypingTarget(target) {
-  return target instanceof HTMLElement && (target.isContentEditable || /^(INPUT|TEXTAREA|SELECT|BUTTON|SUMMARY|A)$/.test(target.tagName));
+const NON_TEXT_INPUT_TYPES = ['range', 'checkbox', 'radio', 'button', 'submit', 'reset'];
+
+function isTextEntryTarget(target) {
+  if (!(target instanceof HTMLElement)) {
+    return false;
+  }
+  if (target.isContentEditable || target.tagName === 'TEXTAREA' || target.tagName === 'SELECT') {
+    return true;
+  }
+  return target.tagName === 'INPUT' && !NON_TEXT_INPUT_TYPES.includes(target.type);
+}
+
+function isControlTarget(target) {
+  return target instanceof HTMLElement && target.matches('button, a[href], summary, input');
+}
+
+function sanitizeViewpointIds(ids) {
+  return [...new Set(ids)].filter((id) => VIEWPOINT_IDS.includes(id));
+}
+
+function shuffledOrder(length, previous) {
+  const order = Array.from({ length }, (_, index) => index);
+  for (let attempt = 0; attempt < 5; attempt += 1) {
+    for (let index = length - 1; index > 0; index -= 1) {
+      const swapIndex = Math.floor(Math.random() * (index + 1));
+      [order[index], order[swapIndex]] = [order[swapIndex], order[index]];
+    }
+    if (!previous || order.some((value, index) => value !== previous[index])) {
+      break;
+    }
+  }
+  return order;
+}
+
+const CLOSED_QUIZ = { isOpen: false, selectedIndex: null, order: null, isRetry: false };
+
+function getQuizSession(quiz, quizState) {
+  const order = quizState.order ?? quiz.options.map((_, index) => index);
+  return {
+    ...quiz,
+    options: order.map((index) => quiz.options[index]),
+    correctIndex: order.indexOf(quiz.correctIndex),
+    selectedIndex: quizState.selectedIndex,
+  };
 }
 
 function Onboarding({ locale, onClose }) {
@@ -102,15 +144,14 @@ export default function App() {
   const [locale, setLocale] = useState(getInitialLocale);
   const [theme, setTheme] = useState(getInitialTheme);
   const [userAction, setUserAction] = useState('viewpoint_changed');
-  const [quizState, setQuizState] = useState({ isOpen: false, selectedIndex: null });
+  const [quizState, setQuizState] = useState(CLOSED_QUIZ);
   const [isViewpointPanelOpen, setIsViewpointPanelOpen] = useState(true);
   const [isLearningPanelOpen, setIsLearningPanelOpen] = useState(true);
   const [isOverviewMode, setIsOverviewMode] = useState(false);
-  const [visitedIds, setVisitedIds] = useState(() => {
-    const stored = readStoredList(STORAGE_KEYS.visited);
-    return stored.includes(INITIAL_VIEWPOINT) ? stored : [...stored, INITIAL_VIEWPOINT];
-  });
-  const [clearedIds, setClearedIds] = useState(() => readStoredList(STORAGE_KEYS.cleared));
+  const [visitedIds, setVisitedIds] = useState(() =>
+    sanitizeViewpointIds([...readStoredList(STORAGE_KEYS.visited), INITIAL_VIEWPOINT]),
+  );
+  const [clearedIds, setClearedIds] = useState(() => sanitizeViewpointIds(readStoredList(STORAGE_KEYS.cleared)));
   const [showOnboarding, setShowOnboarding] = useState(() => readStorage(STORAGE_KEYS.onboarded) !== 'done');
   const [toasts, setToasts] = useState([]);
   const toastIdRef = useRef(0);
@@ -181,31 +222,41 @@ export default function App() {
   const simulationState = getSimulationState(selectedViewpointId, day, userAction);
   const tutorContent = buildTutorContent(simulationState, locale);
   const quizSession = quizState.isOpen
-    ? { ...buildQuiz(simulationState, locale), selectedIndex: quizState.selectedIndex }
+    ? {
+        ...getQuizSession(buildQuiz(simulationState, locale), quizState),
+        showRetryNote: quizState.isRetry && !clearedIds.includes(selectedViewpointId),
+      }
     : null;
 
-  const resetQuiz = () => setQuizState({ isOpen: false, selectedIndex: null });
+  const resetQuiz = () => setQuizState(CLOSED_QUIZ);
 
-  const handleSelectViewpoint = (viewpointId) => {
-    if (viewpointId === selectedViewpointId) {
-      return;
-    }
-
-    if (!visitedIds.includes(viewpointId)) {
-      const nextVisited = [...visitedIds, viewpointId];
-      setVisitedIds(nextVisited);
-      pushToast(copy.toastFirstVisit(getBodyName(BODY_CONFIG[viewpointId], locale)));
-      if (nextVisited.length === VIEWPOINT_IDS.length) {
-        pushToast(copy.toastAllVisited, 'quiz');
+  const handleSelectViewpoint = useCallback(
+    (viewpointId) => {
+      if (viewpointId === selectedViewpointId) {
+        return;
       }
-    }
 
-    startTransition(() => {
-      setSelectedViewpointId(viewpointId);
-      resetQuiz();
-      setUserAction('viewpoint_changed');
-    });
-  };
+      if (!visitedIds.includes(viewpointId)) {
+        const nextVisited = [...visitedIds, viewpointId];
+        const localeCopy = getCopy(locale);
+        setVisitedIds(nextVisited);
+        pushToast(localeCopy.toastFirstVisit(getBodyName(BODY_CONFIG[viewpointId], locale)));
+        if (nextVisited.length === VIEWPOINT_IDS.length) {
+          pushToast(localeCopy.toastAllVisited, 'quiz');
+        }
+      }
+
+      startTransition(() => {
+        setSelectedViewpointId(viewpointId);
+        setQuizState(CLOSED_QUIZ);
+        setUserAction('viewpoint_changed');
+      });
+    },
+    [selectedViewpointId, visitedIds, locale, pushToast],
+  );
+
+  const handleToggleViewpointPanel = useCallback(() => setIsViewpointPanelOpen((current) => !current), []);
+  const handleToggleLearningPanel = useCallback(() => setIsLearningPanelOpen((current) => !current), []);
 
   const isPlayingRef = useRef(isPlaying);
   isPlayingRef.current = isPlaying;
@@ -228,17 +279,28 @@ export default function App() {
     setUserAction('timeline_adjusted');
   };
 
-  const handleRequestQuiz = () => {
-    setQuizState({ isOpen: true, selectedIndex: null });
+  // Options are shuffled on every request so a retry can't be solved by position alone.
+  const openQuiz = (isRetry) => {
+    const optionCount = buildQuiz(simulationState, locale).options.length;
+    setQuizState((current) => ({
+      isOpen: true,
+      selectedIndex: null,
+      order: shuffledOrder(optionCount, current.order),
+      isRetry,
+    }));
     setUserAction('request_quiz');
   };
+
+  const handleRequestQuiz = () => openQuiz(false);
+  const handleRetryQuiz = () => openQuiz(true);
 
   const handleAnswerQuiz = (selectedIndex) => {
     setQuizState((current) => ({ ...current, selectedIndex }));
     setUserAction('quiz_answered');
 
-    const isCorrect = buildQuiz(simulationState, locale).correctIndex === selectedIndex;
-    if (isCorrect && !clearedIds.includes(selectedViewpointId)) {
+    // Only a correct first attempt counts toward the observation log.
+    const isCorrect = quizSession?.correctIndex === selectedIndex;
+    if (isCorrect && !quizState.isRetry && !clearedIds.includes(selectedViewpointId)) {
       const nextCleared = [...clearedIds, selectedViewpointId];
       setClearedIds(nextCleared);
       pushToast(copy.toastQuizCleared(getBodyName(BODY_CONFIG[selectedViewpointId], locale)), 'quiz');
@@ -254,19 +316,48 @@ export default function App() {
   };
 
   useEffect(() => {
+    let handledKeyDown = false;
+    // A control reached with the keyboard keeps its native Space behaviour; one focused by a click does not.
+    let lastInput = 'pointer';
+
+    const handlePointerDown = () => {
+      lastInput = 'pointer';
+    };
+
     const handleKeyDown = (event) => {
-      if (event.code !== 'Space' || event.repeat || event.altKey || event.ctrlKey || event.metaKey) {
+      if (event.code !== 'Space') {
+        lastInput = 'keyboard';
         return;
       }
-      if (isTypingTarget(event.target)) {
+      if (event.altKey || event.ctrlKey || event.metaKey) {
+        return;
+      }
+      if (isTextEntryTarget(event.target) || (lastInput === 'keyboard' && isControlTarget(event.target))) {
         return;
       }
       event.preventDefault();
-      handleTogglePlay();
+      if (!event.repeat) {
+        handledKeyDown = true;
+        handleTogglePlay();
+      }
     };
 
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
+    // A clicked button would otherwise also activate on keyup.
+    const handleKeyUp = (event) => {
+      if (event.code === 'Space' && handledKeyDown) {
+        handledKeyDown = false;
+        event.preventDefault();
+      }
+    };
+
+    window.addEventListener('pointerdown', handlePointerDown, true);
+    window.addEventListener('keydown', handleKeyDown, true);
+    window.addEventListener('keyup', handleKeyUp, true);
+    return () => {
+      window.removeEventListener('pointerdown', handlePointerDown, true);
+      window.removeEventListener('keydown', handleKeyDown, true);
+      window.removeEventListener('keyup', handleKeyUp, true);
+    };
   }, [handleTogglePlay]);
 
   const shellClassName = [
@@ -279,9 +370,11 @@ export default function App() {
 
   return (
     <div className={shellClassName}>
-      <a className="skip-link" href="#learning-title">
-        {locale === 'ja' ? '学習パネルへ移動' : 'Skip to learning panel'}
-      </a>
+      {showLearningPanel && (
+        <a className="skip-link" href="#learning-title">
+          {locale === 'ja' ? '学習パネルへ移動' : 'Skip to learning panel'}
+        </a>
+      )}
 
       <AppHeader
         locale={locale}
@@ -292,8 +385,8 @@ export default function App() {
         clearedCount={clearedIds.length}
         isViewpointPanelOpen={isViewpointPanelOpen}
         isLearningPanelOpen={isLearningPanelOpen}
-        onToggleViewpointPanel={() => setIsViewpointPanelOpen((current) => !current)}
-        onToggleLearningPanel={() => setIsLearningPanelOpen((current) => !current)}
+        onToggleViewpointPanel={handleToggleViewpointPanel}
+        onToggleLearningPanel={handleToggleLearningPanel}
         showPanelToggles={!isCompact}
       />
 
@@ -345,6 +438,7 @@ export default function App() {
           quizSession={quizSession}
           locale={locale}
           onRequestQuiz={handleRequestQuiz}
+          onRetryQuiz={handleRetryQuiz}
           onAnswerQuiz={handleAnswerQuiz}
         />
       )}

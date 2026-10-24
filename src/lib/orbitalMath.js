@@ -52,10 +52,11 @@ function getOrbitalAngle(body, day) {
   return degToRad(body.initialAngleDeg) + (day / body.orbitalPeriodDays) * Math.PI * 2;
 }
 
+// +y is ecliptic north; orbits run counter-clockwise seen from +y (prograde), so z = -r·sin.
 function getPlanetPosition(body, day) {
   const angle = getOrbitalAngle(body, day);
   const x = body.orbitRadiusAu * Math.cos(angle);
-  const z = body.orbitRadiusAu * Math.sin(angle);
+  const z = -body.orbitRadiusAu * Math.sin(angle);
   const y = Math.sin(angle * 0.65) * body.inclination;
   return [x, y, z];
 }
@@ -75,7 +76,7 @@ export function getBodyPosition(bodyId, day) {
     const localOffset = [
       body.orbitRadiusAu * Math.cos(angle),
       body.orbitRadiusAu * Math.sin(angle) * Math.sin(tilt),
-      body.orbitRadiusAu * Math.sin(angle) * Math.cos(tilt),
+      -body.orbitRadiusAu * Math.sin(angle) * Math.cos(tilt),
     ];
     return add(earthPosition, localOffset);
   }
@@ -107,10 +108,11 @@ function getMoonDisplayPosition(day, displayPositions) {
   const earthDisplayPosition = displayPositions.Earth;
   const moonBody = BODY_CONFIG.Moon;
   const angle = getOrbitalAngle(moonBody, day);
+  const tilt = degToRad(moonBody.orbitTiltDeg);
   const offset = [
     Math.cos(angle) * 0.92,
-    Math.sin(angle * 0.7) * 0.18,
-    Math.sin(angle) * 0.92,
+    Math.sin(angle) * 0.92 * Math.sin(tilt),
+    -Math.sin(angle) * 0.92 * Math.cos(tilt),
   ];
   return add(earthDisplayPosition, offset);
 }

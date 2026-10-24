@@ -28,6 +28,7 @@ The `Learning Module` panel provides explanatory guidance and a short quiz based
   - The lit side faces the actual direction of the Sun, with an illumination gauge and metric tiles
 - Observation log
   - Tracks which viewpoints have been observed and which quizzes have been cleared (stored locally)
+  - Quiz options are shuffled on each request; only a correct first attempt counts as cleared
   - Small toast notifications for first observations and cleared quizzes
 - First-visit guide
   - A dismissible three-step guide (choose a viewpoint, move through time, check with a quiz)
@@ -36,7 +37,7 @@ The `Learning Module` panel provides explanatory guidance and a short quiz based
   - Observation prompts
   - Viewpoint-specific quiz
 - Time controls
-  - Play and pause (also with the Space key)
+  - Play and pause (also with the Space key, unless a control was reached with the keyboard)
   - Multiple playback speeds
   - Timeline scrubber with year ticks
 - Interface options
@@ -65,7 +66,7 @@ The current implementation does not use a backend API or database. Language and 
 
 This application uses a simplified orbital model intended for educational use.
 
-- Planetary motion is approximated with near-circular orbits
+- Planetary motion is approximated with near-circular, prograde orbits (counter-clockwise seen from ecliptic north, +y)
 - Orbital radius and orbital period are represented with fixed learning-oriented values
 - The Moon is modeled as a simplified circular orbit around Earth at a constant distance (about 384,000 km), tilted about 5.1° from the ecliptic
 - Displayed distances and body sizes are visually compressed for readability in the 3D view
