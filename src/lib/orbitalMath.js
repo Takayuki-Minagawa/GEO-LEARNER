@@ -164,7 +164,7 @@ function getPhaseName(illuminatedFraction, waxing) {
   return { english: 'Full', japanese: '満地球' };
 }
 
-function getObservationCategory(viewpointId) {
+export function getObservationCategory(viewpointId) {
   if (viewpointId === 'Moon') {
     return 'satellite';
   }
@@ -178,14 +178,14 @@ function getPhaseState(viewerPosition, earthPosition, day, viewpointId) {
   const toSun = subtract([0, 0, 0], earthPosition);
   const toViewer = subtract(viewerPosition, earthPosition);
   const phaseAngle = angleBetween(toSun, toViewer);
-  const illuminatedFraction = (1 - Math.cos(phaseAngle)) / 2;
+  const illuminatedFraction = (1 + Math.cos(phaseAngle)) / 2;
 
   const nextViewerPosition = getBodyPosition(viewpointId, day + 1.5);
   const nextEarthPosition = getBodyPosition('Earth', day + 1.5);
   const nextToSun = subtract([0, 0, 0], nextEarthPosition);
   const nextToViewer = subtract(nextViewerPosition, nextEarthPosition);
   const nextPhaseAngle = angleBetween(nextToSun, nextToViewer);
-  const nextIlluminatedFraction = (1 - Math.cos(nextPhaseAngle)) / 2;
+  const nextIlluminatedFraction = (1 + Math.cos(nextPhaseAngle)) / 2;
   const waxing = nextIlluminatedFraction >= illuminatedFraction;
   const phaseName = getPhaseName(illuminatedFraction, waxing);
   const illuminatedPercent = Math.round(illuminatedFraction * 100);
