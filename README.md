@@ -67,7 +67,7 @@ This application uses a simplified orbital model intended for educational use.
 
 - Planetary motion is approximated with near-circular orbits
 - Orbital radius and orbital period are represented with fixed learning-oriented values
-- The Moon is modeled as a simplified relative orbit around Earth
+- The Moon is modeled as a simplified circular orbit around Earth at a constant distance (about 384,000 km), tilted about 5.1° from the ecliptic
 - Displayed distances and body sizes are visually compressed for readability in the 3D view
 
 ### Calculated Values

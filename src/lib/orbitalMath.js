@@ -70,10 +70,12 @@ export function getBodyPosition(bodyId, day) {
   if (body.parentId === 'Earth') {
     const earthPosition = getBodyPosition('Earth', day);
     const angle = getOrbitalAngle(body, day);
+    // Tilt the orbital plane instead of adding a vertical offset, so the distance to Earth stays constant.
+    const tilt = degToRad(body.orbitTiltDeg);
     const localOffset = [
       body.orbitRadiusAu * Math.cos(angle),
-      Math.sin(angle * 1.1) * body.inclination,
-      body.orbitRadiusAu * Math.sin(angle),
+      body.orbitRadiusAu * Math.sin(angle) * Math.sin(tilt),
+      body.orbitRadiusAu * Math.sin(angle) * Math.cos(tilt),
     ];
     return add(earthPosition, localOffset);
   }
