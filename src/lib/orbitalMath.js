@@ -52,10 +52,11 @@ function getOrbitalAngle(body, day) {
   return degToRad(body.initialAngleDeg) + (day / body.orbitalPeriodDays) * Math.PI * 2;
 }
 
+// +y is ecliptic north; orbits run counter-clockwise seen from +y (prograde), so z = -r·sin.
 function getPlanetPosition(body, day) {
   const angle = getOrbitalAngle(body, day);
   const x = body.orbitRadiusAu * Math.cos(angle);
-  const z = body.orbitRadiusAu * Math.sin(angle);
+  const z = -body.orbitRadiusAu * Math.sin(angle);
   const y = Math.sin(angle * 0.65) * body.inclination;
   return [x, y, z];
 }
@@ -70,10 +71,12 @@ export function getBodyPosition(bodyId, day) {
   if (body.parentId === 'Earth') {
     const earthPosition = getBodyPosition('Earth', day);
     const angle = getOrbitalAngle(body, day);
+    // Tilt the orbital plane instead of adding a vertical offset, so the distance to Earth stays constant.
+    const tilt = degToRad(body.orbitTiltDeg);
     const localOffset = [
       body.orbitRadiusAu * Math.cos(angle),
-      Math.sin(angle * 1.1) * body.inclination,
-      body.orbitRadiusAu * Math.sin(angle),
+      body.orbitRadiusAu * Math.sin(angle) * Math.sin(tilt),
+      -body.orbitRadiusAu * Math.sin(angle) * Math.cos(tilt),
     ];
     return add(earthPosition, localOffset);
   }
@@ -105,10 +108,11 @@ function getMoonDisplayPosition(day, displayPositions) {
   const earthDisplayPosition = displayPositions.Earth;
   const moonBody = BODY_CONFIG.Moon;
   const angle = getOrbitalAngle(moonBody, day);
+  const tilt = degToRad(moonBody.orbitTiltDeg);
   const offset = [
     Math.cos(angle) * 0.92,
-    Math.sin(angle * 0.7) * 0.18,
-    Math.sin(angle) * 0.92,
+    Math.sin(angle) * 0.92 * Math.sin(tilt),
+    -Math.sin(angle) * 0.92 * Math.cos(tilt),
   ];
   return add(earthDisplayPosition, offset);
 }
@@ -164,7 +168,7 @@ function getPhaseName(illuminatedFraction, waxing) {
   return { english: 'Full', japanese: '満地球' };
 }
 
-function getObservationCategory(viewpointId) {
+export function getObservationCategory(viewpointId) {
   if (viewpointId === 'Moon') {
     return 'satellite';
   }
@@ -178,14 +182,14 @@ function getPhaseState(viewerPosition, earthPosition, day, viewpointId) {
   const toSun = subtract([0, 0, 0], earthPosition);
   const toViewer = subtract(viewerPosition, earthPosition);
   const phaseAngle = angleBetween(toSun, toViewer);
-  const illuminatedFraction = (1 - Math.cos(phaseAngle)) / 2;
+  const illuminatedFraction = (1 + Math.cos(phaseAngle)) / 2;
 
   const nextViewerPosition = getBodyPosition(viewpointId, day + 1.5);
   const nextEarthPosition = getBodyPosition('Earth', day + 1.5);
   const nextToSun = subtract([0, 0, 0], nextEarthPosition);
   const nextToViewer = subtract(nextViewerPosition, nextEarthPosition);
   const nextPhaseAngle = angleBetween(nextToSun, nextToViewer);
-  const nextIlluminatedFraction = (1 - Math.cos(nextPhaseAngle)) / 2;
+  const nextIlluminatedFraction = (1 + Math.cos(nextPhaseAngle)) / 2;
   const waxing = nextIlluminatedFraction >= illuminatedFraction;
   const phaseName = getPhaseName(illuminatedFraction, waxing);
   const illuminatedPercent = Math.round(illuminatedFraction * 100);

@@ -61,7 +61,7 @@ export const BODY_CONFIG = {
     orbitRadiusAu: 0.00257,
     orbitalPeriodDays: 27.32,
     initialAngleDeg: 230,
-    inclination: 0.02,
+    orbitTiltDeg: 5.14,
     parentId: 'Earth',
     summaryJa: '地球の衛星からは、地球の満ち欠けが月と反対になる様子を直感的に比べられます。',
     summaryEn: 'Compare the phase of Earth from its satellite and see how it mirrors the Moon as seen from Earth.',
