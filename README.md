@@ -25,19 +25,27 @@ The `Learning Module` panel provides explanatory guidance and a short quiz based
   - Visual relationship between the selected body and Earth
 - Earth inset display
   - Enlarged phase view of Earth shown at the top of the learning panel
+  - The lit side faces the actual direction of the Sun, with an illumination gauge and metric tiles
+- Observation log
+  - Tracks which viewpoints have been observed and which quizzes have been cleared (stored locally)
+  - Small toast notifications for first observations and cleared quizzes
+- First-visit guide
+  - A dismissible three-step guide (choose a viewpoint, move through time, check with a quiz)
 - Learning panel
   - Context-sensitive explanation of the current state
   - Observation prompts
   - Viewpoint-specific quiz
 - Time controls
-  - Play and pause
+  - Play and pause (also with the Space key)
   - Multiple playback speeds
-  - Timeline scrubber
+  - Timeline scrubber with year ticks
 - Interface options
   - Default Japanese UI with an English toggle
   - Light mode and dark mode switching
-  - Show and hide controls for the left and right side panels
+  - Show and hide controls for the left and right side panels (desktop)
   - Full orbit overview mode to zoom out and see the entire Solar System
+  - Responsive layout: fixed-height console on wide screens, stacked layout with a horizontal viewpoint strip on phones
+  - Respects `prefers-reduced-motion`
   - Custom SVG favicon for the published site
 
 ## Technology Stack
@@ -49,7 +57,7 @@ The `Learning Module` panel provides explanatory guidance and a short quiz based
 - drei
 - CSS
 
-The current implementation does not use a backend API or database. Language and theme preferences are stored locally in the browser.
+The current implementation does not use a backend API or database. Language and theme preferences and the observation log are stored locally in the browser.
 
 ## Program Specification
 
@@ -101,7 +109,9 @@ GEO-LEARNER/
 │   └── favicon.svg
 ├── src/
 │   ├── components/
+│   │   ├── AppHeader.jsx
 │   │   ├── EarthInset.jsx
+│   │   ├── Icons.jsx
 │   │   ├── LearningModule.jsx
 │   │   ├── SimulationCanvas.jsx
 │   │   ├── SimulationControls.jsx
@@ -111,6 +121,7 @@ GEO-LEARNER/
 │   ├── lib/
 │   │   ├── i18n.js
 │   │   ├── orbitalMath.js
+│   │   ├── storage.js
 │   │   └── tutor.js
 │   ├── App.jsx
 │   ├── main.jsx
@@ -123,21 +134,29 @@ GEO-LEARNER/
 
 ## Component Structure
 
+### `AppHeader`
+
+- Shows the brand, the observation-log progress, and panel toggles
+- Provides language and theme switching controls
+
 ### `ViewpointSelector`
 
-- Displays the list of selectable viewpoints
+- Displays the selectable viewpoints grouped by orbit (inside Earth's orbit, next to Earth, outside Earth's orbit)
 - Manages the active selection state
-- Provides language and theme switching controls
+- Marks observed viewpoints and cleared quizzes
 
 ### `EarthInset`
 
-- Displays an enlarged phase view of Earth with illumination and shadow
-- Shows distance and apparent angular size alongside the phase label
+- Displays an enlarged phase view of Earth with the terminator drawn from the illuminated fraction
+- Places the lit side toward the Sun as seen from the current viewpoint
+- Shows illumination, distance, apparent angular size, and elongation
 
 ### `SimulationCanvas`
 
 - Renders the 3D Solar System view
 - Shows the positional relationship between the current viewpoint and Earth
+- Frames the camera so both the observer and Earth stay in view
+- Overlays key values, a legend, and the overview toggle on the stage
 - Supports an overview mode that zooms out to show all planetary orbits
 
 ### `SimulationControls`
@@ -149,10 +168,10 @@ GEO-LEARNER/
 ### `LearningModule`
 
 - Displays the Earth inset view at the top of the panel
-- Displays the current simulation input state
 - Shows explanatory guidance
-- Displays a simplified orbital relationship diagram
-- Presents quiz questions and feedback
+- Displays a simplified orbital relationship diagram with the elongation angle
+- Presents quiz questions, feedback, and a retry option
+- Displays the current simulation input state in a collapsible section
 - Regenerates text content according to the selected language
 
 ## Local Development
